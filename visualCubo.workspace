@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="advancedFreeGlut/advancedFreeGlut.cbp" />
-		<Project filename="basicFreeGlut/basicFreeGlut.cbp" />
+		<Project filename="visualcubo/visualCubo.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

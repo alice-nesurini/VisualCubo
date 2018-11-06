@@ -11,6 +11,8 @@ float move_distance = 0.0f;
 int windowId;
 bool toggleRun;
 float colors[18];
+// cube size
+int size = 5.0f;
 
 void animation(int value) {
 	angle += 0.01;
@@ -25,51 +27,51 @@ void drawCube() {
 	//THE CUBE
 	glBegin(GL_TRIANGLE_STRIP);
 	glColor3f(colors[0], colors[1], colors[2]);
-	glVertex3f(-10.0f, -10.0f, 10.0f);
-	glVertex3f(-10.0f, 10.0f, 10.0f);
-	glVertex3f(10.0f, -10.0f, 10.0f);
-	glVertex3f(10.0f, 10.0f, 10.0f);
+	glVertex3f(-size, -size, size);
+	glVertex3f(-size, size, size);
+	glVertex3f(size, -size, size);
+	glVertex3f(size, size, size);
 	glEnd();
 
 	glBegin(GL_TRIANGLE_STRIP);
 	glColor3f(colors[3], colors[4], colors[5]);
-	glVertex3f(-10.0f, -10.0f, -10.0f);
-	glVertex3f(-10.0f, 10.0f, -10.0f);
-	glVertex3f(10.0f, -10.0f, -10.0f);
-	glVertex3f(10.0f, 10.0f, -10.0f);
+	glVertex3f(-size, -size, -size);
+	glVertex3f(-size, size, -size);
+	glVertex3f(size, -size, -size);
+	glVertex3f(size, size, -size);
 	glEnd();
 
 	glBegin(GL_TRIANGLE_STRIP);
 	glColor3f(0.5f, 0.5f, 0.2f);
 	glColor3f(colors[6], colors[7], colors[8]);
-	glVertex3f(-10.0f, 10.0f, -10.0f);
-	glVertex3f(-10.0f, -10.0f, -10.0f);
-	glVertex3f(-10.0f, 10.0f, 10.0f);
-	glVertex3f(-10.0f, -10.0f, 10.0f);
+	glVertex3f(-size, size, -size);
+	glVertex3f(-size, -size, -size);
+	glVertex3f(-size, size, size);
+	glVertex3f(-size, -size, size);
 	glEnd();
 
 	glBegin(GL_TRIANGLE_STRIP);
 	glColor3f(colors[9], colors[10], colors[11]);
-	glVertex3f(10.0f, 10.0f, -10.0f);
-	glVertex3f(10.0f, -10.0f, -10.0f);
-	glVertex3f(10.0f, 10.0f, 10.0f);
-	glVertex3f(10.0f, -10.0f, 10.0f);
+	glVertex3f(size, size, -size);
+	glVertex3f(size, -size, -size);
+	glVertex3f(size, size, size);
+	glVertex3f(size, -size, size);
 	glEnd();
 
 	glBegin(GL_TRIANGLE_STRIP);
 	glColor3f(colors[12], colors[13], colors[14]);
-	glVertex3f(-10.0f, 10.0f, -10.0f);
-	glVertex3f(-10.0f, 10.0f, 10.0f);
-	glVertex3f(10.0f, 10.0f, -10.0f);
-	glVertex3f(10.0f, 10.0f, 10.0f);
+	glVertex3f(-size, size, -size);
+	glVertex3f(-size, size, size);
+	glVertex3f(size, size, -size);
+	glVertex3f(size, size, size);
 	glEnd();
 
 	glBegin(GL_TRIANGLE_STRIP);
 	glColor3f(colors[15], colors[16], colors[17]);
-	glVertex3f(-10.0f, -10.0f, -10.0f);
-	glVertex3f(-10.0f, -10.0f, 10.0f);
-	glVertex3f(10.0f, -10.0f, -10.0f);
-	glVertex3f(10.0f, -10.0f, 10.0f);
+	glVertex3f(-size, -size, -size);
+	glVertex3f(-size, -size, size);
+	glVertex3f(size, -size, -size);
+	glVertex3f(size, -size, size);
 	glEnd();
 }
 
@@ -95,12 +97,26 @@ void displayCallback() {
 	//movement matrix
 	glm::mat4 translation = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, distance));
 	glm::mat4 moveH = glm::translate(glm::mat4(), glm::vec3(move_distance, 0.0f, 0.0f));
-	glm::mat4 rotationXY = glm::rotate(glm::mat4(), glm::radians(angle), glm::vec3(1.0f, 1.0f, 0.0f));
+	glm::mat4 moveY = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::mat4 rotationY = glm::rotate(glm::mat4(), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
 	//model matrix to load
-	glm::mat4 f = moveH * translation * rotationXY;
+	glm::mat4 f = moveH * moveY * translation * rotationY;
 	//load to opengl
 	glLoadMatrixf(glm::value_ptr(f));
 
+	// draw first cube (base)
+	drawCube();
+	// remodel cube by scaling & reload matrix (middle)
+	glm::mat4 scaling = glm::scale(glm::mat4(), glm::vec3(0.50f, 0.50f, 0.50f));
+	glm::mat4 yAxis = glm::translate(glm::mat4(), glm::vec3(0.0f, size+size*0.5, 0.0f));
+	f = moveH * translation * yAxis * scaling * rotationY;
+	glLoadMatrixf(glm::value_ptr(f));
+	drawCube();
+	// remodel (top)
+	scaling = glm::scale(glm::mat4(), glm::vec3(0.250f, 0.250f, 0.250f));
+	yAxis = glm::translate(glm::mat4(), glm::vec3(0.0f, size*2+size*0.250f, 0.0f));
+	f = moveH * translation * yAxis * scaling * rotationY;
+	glLoadMatrixf(glm::value_ptr(f));
 	drawCube();
 
 	glutSwapBuffers();
@@ -127,7 +143,7 @@ void specialCallback(int key, int mouseX, int mouseY) {
 		break;
 
 	case GLUT_KEY_LEFT:
-		move_distance-=speed;
+		move_distance -= speed;
 		break;
 
 	case GLUT_KEY_RIGHT:
@@ -142,6 +158,7 @@ void specialCallback(int key, int mouseX, int mouseY) {
 int main(int argc, char *argv[]) {
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(500,500);
 	glutInit(&argc, argv);
 	//Flags
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);

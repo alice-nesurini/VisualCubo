@@ -168,6 +168,9 @@ int main(int argc, char *argv[]) {
 	//z buffer
 	glEnable(GL_DEPTH_TEST);
 
+	// per vedere se è giusto :)
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	//set callback functions:
 	glutDisplayFunc(displayCallback);
 	glutReshapeFunc(reshapeCallback);

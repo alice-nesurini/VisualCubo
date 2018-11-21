@@ -5,12 +5,19 @@
 #include <GL/freeglut.h>
 #include <iostream>
 
+int shininess = 7;
 float angle = 0.0f;
 float distance = -45.0f;
 float move_distance = 0.0f;
 int windowId;
 bool toggleRun;
 float colors[18];
+bool showNormal = true;
+
+// material
+glm::vec4 ambient(0.1f, 0.1f, 0.5f, 1.0f);
+glm::vec4 diffuse(0.5f, 0.5f, 0.5f, 1.0f);
+glm::vec4 specular(1.0f, 1.0f, 1.0f, 1.0f);
 
 void animation(int value) {
 	angle += 0.01;
@@ -21,56 +28,61 @@ void idleCallback() {
 	glutTimerFunc(100, animation, 0);
 }
 
-void drawCube() {
+void displayTriAndNorm(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3){
+	// Compute normal:
+	glm::vec3 v1 = p2 - p1;
+	glm::vec3 v2 = p3 - p1;
+	glm::vec3 n = glm::normalize(glm::cross(v1, v2));
+
+	// Compute triangle baricenter:
+	glm::vec3 center = (p1 + p2 + p3) / 3.0f;
+	glm::vec3 dest = center + n * 6.0f;
+
+	// Render triangle:
+	glBegin(GL_TRIANGLES);
+	glNormal3fv(glm::value_ptr(n));
+	glVertex3fv(glm::value_ptr(p1));
+	glVertex3fv(glm::value_ptr(p2));
+	glVertex3fv(glm::value_ptr(p3));
+	glEnd();
+
+	// Render normal:
+	if(showNormal){
+	glBegin(GL_LINES);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glVertex3fv(glm::value_ptr(center));
+	glColor3f(0.2f, 0.2f, 1.0f);
+	glVertex3fv(glm::value_ptr(dest));
+	glEnd();
+	}
+}
+
+void drawCube(float edge) {
 	//THE CUBE
-	glBegin(GL_TRIANGLE_STRIP);
-	glColor3f(colors[0], colors[1], colors[2]);
-	glVertex3f(-10.0f, -10.0f, 10.0f);
-	glVertex3f(-10.0f, 10.0f, 10.0f);
-	glVertex3f(10.0f, -10.0f, 10.0f);
-	glVertex3f(10.0f, 10.0f, 10.0f);
-	glEnd();
+	float size = edge / 2.0f;
+	// back
+	displayTriAndNorm(glm::vec3(size, 0, -size), glm::vec3(-size, 0, -size), glm::vec3(size, edge, -size));
+	displayTriAndNorm(glm::vec3(-size, 0, -size), glm::vec3(-size, edge, -size), glm::vec3(size, edge, -size));
 
-	glBegin(GL_TRIANGLE_STRIP);
-	glColor3f(colors[3], colors[4], colors[5]);
-	glVertex3f(-10.0f, -10.0f, -10.0f);
-	glVertex3f(-10.0f, 10.0f, -10.0f);
-	glVertex3f(10.0f, -10.0f, -10.0f);
-	glVertex3f(10.0f, 10.0f, -10.0f);
-	glEnd();
+	// front
+	displayTriAndNorm(glm::vec3(-size, 0, size), glm::vec3(size, 0, size), glm::vec3(-size, edge, size));
+	displayTriAndNorm(glm::vec3(size, 0, size), glm::vec3(size, edge, size), glm::vec3(-size, edge, size));
 
-	glBegin(GL_TRIANGLE_STRIP);
-	glColor3f(0.5f, 0.5f, 0.2f);
-	glColor3f(colors[6], colors[7], colors[8]);
-	glVertex3f(-10.0f, 10.0f, -10.0f);
-	glVertex3f(-10.0f, -10.0f, -10.0f);
-	glVertex3f(-10.0f, 10.0f, 10.0f);
-	glVertex3f(-10.0f, -10.0f, 10.0f);
-	glEnd();
+	// left
+	displayTriAndNorm(glm::vec3(-size, 0, -size), glm::vec3(-size, 0, size), glm::vec3(-size, edge, -size));
+	displayTriAndNorm(glm::vec3(-size, edge, -size), glm::vec3(-size, 0, size), glm::vec3(-size, edge, size));
 
-	glBegin(GL_TRIANGLE_STRIP);
-	glColor3f(colors[9], colors[10], colors[11]);
-	glVertex3f(10.0f, 10.0f, -10.0f);
-	glVertex3f(10.0f, -10.0f, -10.0f);
-	glVertex3f(10.0f, 10.0f, 10.0f);
-	glVertex3f(10.0f, -10.0f, 10.0f);
-	glEnd();
+	// right
+	displayTriAndNorm(glm::vec3(size, 0, -size), glm::vec3(size, edge,- size), glm::vec3(size, 0, size));
+	displayTriAndNorm(glm::vec3(size, edge, -size), glm::vec3(size, edge, size), glm::vec3(size, 0, size));
 
-	glBegin(GL_TRIANGLE_STRIP);
-	glColor3f(colors[12], colors[13], colors[14]);
-	glVertex3f(-10.0f, 10.0f, -10.0f);
-	glVertex3f(-10.0f, 10.0f, 10.0f);
-	glVertex3f(10.0f, 10.0f, -10.0f);
-	glVertex3f(10.0f, 10.0f, 10.0f);
-	glEnd();
+	// bottom
+	displayTriAndNorm(glm::vec3(size, 0, -size), glm::vec3(size, 0, size), glm::vec3(-size, 0, -size));
+	displayTriAndNorm(glm::vec3(-size, 0, -size), glm::vec3(size, 0, size), glm::vec3(-size, 0, size));
 
-	glBegin(GL_TRIANGLE_STRIP);
-	glColor3f(colors[15], colors[16], colors[17]);
-	glVertex3f(-10.0f, -10.0f, -10.0f);
-	glVertex3f(-10.0f, -10.0f, 10.0f);
-	glVertex3f(10.0f, -10.0f, -10.0f);
-	glVertex3f(10.0f, -10.0f, 10.0f);
-	glEnd();
+	// top
+	displayTriAndNorm(glm::vec3(size, edge, -size), glm::vec3(-size, edge, -size), glm::vec3(size, edge, size));
+	displayTriAndNorm(glm::vec3(-size, edge, -size), glm::vec3(-size, edge, size), glm::vec3(size, edge, size));
 }
 
 void keyboardCallback(unsigned char key, int x, int y) {
@@ -85,12 +97,27 @@ void keyboardCallback(unsigned char key, int x, int y) {
 			colors[i] = ((float)rand() / (RAND_MAX));
 		}
 	}
+	if (key == 'n') {
+		showNormal = !showNormal;
+	}
 }
 
 void displayCallback() {
-	glClearColor(0.9f, 0.8f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
+
+	// lighting
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, glm::value_ptr(ambient));
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, glm::value_ptr(diffuse));
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, glm::value_ptr(specular));
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, powf(2.0f, (float)shininess));
+
+	glm::vec4 ambientLight(1.0f, 1.0f, 1.0f, 1.0f);
+	glm::vec4 diffuseLight(1.0f, 1.0f, 1.0f, 1.0f);
+	glm::vec4 specularLight(1.0f, 1.0f, 1.0f, 1.0f);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(ambientLight));
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(diffuseLight));
+	glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(specularLight));
 
 	//movement matrix
 	glm::mat4 translation = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, distance));
@@ -101,7 +128,7 @@ void displayCallback() {
 	//load to opengl
 	glLoadMatrixf(glm::value_ptr(f));
 
-	drawCube();
+	drawCube(10);
 
 	glutSwapBuffers();
 }
@@ -148,8 +175,13 @@ int main(int argc, char *argv[]) {
 	windowId = glutCreateWindow("Cubo");
 	//opengl context ready
 
-	//z buffer
+	//z buffer + lighting
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_NORMALIZE);
 
 	//set callback functions:
 	glutDisplayFunc(displayCallback);
